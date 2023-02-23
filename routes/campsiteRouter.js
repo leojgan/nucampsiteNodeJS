@@ -7,13 +7,18 @@ campsiteRouter.route('/')
     Campsite.find()
     .then(campsites => {
         res.statusCode = 200;
-        res.setHeader('Content-Type', 'text/plain');
+        res.setHeader('Content-Type', 'application/json');
+        // res.json will return the json data and then close the response stream
         res.json(campsites);
     })
+    // NodeJS has built-in error handling. This catch will pass along the error to this method.
     .catch(err => next(err));
 })
 .post((req, res, next) => {
+    // Campsite.create will use the campsiteSchema to create a new Campsite Object that will then be saved to the server
+    // req.body will contain this information, which will be parsed by the Express.JSON middleware and verified by the Mongoose Schema
     Campsite.create(req.body)
+    // campsite will contain info about the document that was posted
     .then(campsite => {
         console.log('Campsite Created ', campsite);
         res.statusCode = 200;
@@ -41,7 +46,7 @@ campsiteRouter.route('/:campsiteId')
     Campsite.findById(req.params.campsiteId)
     .then(campsite => {
         res.statusCode = 200;
-        res.setHeader('Content-Type', 'text/plain');
+        res.setHeader('Content-Type', 'application/json');
         res.json(campsite);
     })
     .catch(err => next(err));

@@ -19,7 +19,13 @@ const connect = mongoose.connect(url, {
   useUnifiedTopology: true
 });
 
-connect.then(() => console.log('Connected correctly to nucampsiteDB server'), err => console.log(err));
+// This connect method refers to connecting to the MongoDB server
+// then methods have an optional second argument that will run if an error is caught
+// removes necessity for .catch method. Useful if you're not chaining promises.
+connect.then(
+  () => console.log('Connection to nucampsite collection in the MongoDB server successful.'), // first argument, what to do once Promise is resolved
+  err => console.log(err) // second argument, what to do if Promise throws an error
+);
 
 const app = express();
 
