@@ -164,10 +164,12 @@ campsiteRouter.route('/:campsiteId/comments/:commentId')
     })
     .catch(err => next(err));
 })
+// not supported; can't create a new comment from the comments; handled up a level
 .post((req, res) => {
     res.statusCode = 403;
     res.end(`POST operation not supported on /campsites/${req.params.camsiteId}/comments/${req.params.commentId}`);
 })
+// updates an existing comment
 .put((req, res, next) => {
     Campsite.findById(req.params.campsiteId)
     .then(campsite => {
@@ -179,6 +181,7 @@ campsiteRouter.route('/:campsiteId/comments/:commentId')
                 campsite.comments.id(req.params.commentId).text = req.body.text;
             }
             campsite.save()
+            // once the save is successful, we'll return the saved JSON data to the client
             .then(campsite => {
                 res.statusCode = 200;
                 res.setHeader('Content-Type', 'application/json');
@@ -201,6 +204,7 @@ campsiteRouter.route('/:campsiteId/comments/:commentId')
     Campsite.findById(req.params.campsiteId)
     .then(campsite=> {
         if (campsite && campsite.comments.id(req.params/commentId)) {
+            // this will remove the comment that matches the id passed into the DELETE operation
             campsite.comments.id(req.params.commentId).remove();
             campsite.save()
             .then(campsite => {

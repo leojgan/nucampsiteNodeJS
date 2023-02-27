@@ -14,7 +14,7 @@ const commentSchema = new Schema(
         },
         text: {
             type: String,
-            trquired: true
+            required: true
         },
         author: {
             type: String,
@@ -26,6 +26,8 @@ const commentSchema = new Schema(
     }
 );
 
+// can also drop the const Schema = mongoose.Schema and just use:
+    // const campsiteSchema = new mongoose.Schema({ ... })
 const campsiteSchema = new Schema(
     {
         name: {
