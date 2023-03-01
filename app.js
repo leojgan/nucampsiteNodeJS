@@ -49,34 +49,12 @@ app.use(session({
 
 function auth(req, res, next){
   console.log(req.session);
-  if (!req.session.user) {
-    const authHeader = req.headers.authorization;
-    if(!authHeader) {
-      const err = new Error('You are not authenticated!');
-      res.setHeader('WWW-Authenticate', 'Basic');
-      err.status = 401;
-      return next(err);
-    }
-
-    // Buffer is a type of object used to represent a fixed-sized chunk of data
-    // here we are taking the Base-64 portion of the string and converting it into binary
-      // we then take the Buffer and convert it back into a string
-        // by not using an argument in the toString() method, we are using UTF-8 for conversion
-      // we then split the string which now reads <username>:<password>
-    const auth = Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
-    const user = auth[0];
-    const pass = auth[1];
-    if (user === 'admin' && pass === 'password') {
-      req.session.user = 'admin';
-      return next(); // authorized
-    } else {
-      const err = new Error('You are unauthenticated');
-      res.setHeader('WWW-Authenticate', 'Basic');
-      err.status = 401;
-      return next(err);
-    }
+  if(!req.session.user) {
+    const err = new Error('You are not authenticated!');
+    err.status = 401;
+    return next(err);
   } else {
-    if (req.session.user === 'admin') {
+    if (req.session.user === 'authenticated') {
       return next();
     } else {
       const err = new Error('You are not authenticated!');
@@ -94,12 +72,12 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 // app.use(cookieParser());
-app.use(auth);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use(auth);
 app.use('/campsites', campsiteRouter);
 app.use('/promotions', promotionRouter);
 app.use('/partners', partnerRouter);
