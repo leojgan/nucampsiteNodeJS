@@ -3,7 +3,13 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-
+const session = require('express-session');
+const FileStore = require('session-file-store')(session);
+/* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+because of JavaScript's higher-order functions, we are calling the
+function being returned by require('session-file-store') with the
+parameter of (session), which we just got from require('express-session)
+*/
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const campsiteRouter = require('./routes/campsiteRouter');
@@ -28,10 +34,22 @@ connect.then(
 );
 
 const app = express();
-app.use(cookieParser('12345-67890-09876-54321'));
+// app.use(cookieParser('12345-67890-09876-54321')); ...don't  use Cookie-Parser with Express-Session
+
+app.use(session({
+  name: 'session-id',
+  secret: '12345-67890-09876-54321',
+  // if no updates are made in a session, the session will not be saved
+  saveUninitialized: false,
+  // When true, this will force the session to be saved back to the session store, even if there were no updates
+  // Typically, you'll want to set this as false
+  resave: false,
+  store: new FileStore()
+}));
 
 function auth(req, res, next){
-  if (!req.signedCookies.user) {
+  console.log(req.session);
+  if (!req.session.user) {
     const authHeader = req.headers.authorization;
     if(!authHeader) {
       const err = new Error('You are not authenticated!');
@@ -40,12 +58,16 @@ function auth(req, res, next){
       return next(err);
     }
 
-    // Buffer is a global class from Node with a static method from
+    // Buffer is a type of object used to represent a fixed-sized chunk of data
+    // here we are taking the Base-64 portion of the string and converting it into binary
+      // we then take the Buffer and convert it back into a string
+        // by not using an argument in the toString() method, we are using UTF-8 for conversion
+      // we then split the string which now reads <username>:<password>
     const auth = Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
     const user = auth[0];
     const pass = auth[1];
     if (user === 'admin' && pass === 'password') {
-      res.cookie('user', 'admin', {signed: true});
+      req.session.user = 'admin';
       return next(); // authorized
     } else {
       const err = new Error('You are unauthenticated');
@@ -54,7 +76,7 @@ function auth(req, res, next){
       return next(err);
     }
   } else {
-    if (req.signedCookies.user === 'admin') {
+    if (req.session.user === 'admin') {
       return next();
     } else {
       const err = new Error('You are not authenticated!');
@@ -71,7 +93,7 @@ app.set('view engine', 'jade');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+// app.use(cookieParser());
 app.use(auth);
 
 app.use(express.static(path.join(__dirname, 'public')));
