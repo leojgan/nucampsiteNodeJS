@@ -1,8 +1,9 @@
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
-const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const passport = require('passport');
+const authenticate = require('./authenticate');
 const session = require('express-session');
 const FileStore = require('session-file-store')(session);
 /* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -47,20 +48,19 @@ app.use(session({
   store: new FileStore()
 }));
 
+// These two lines are only necessary if we're using passport with express-session
+app.use(passport.initialize());
+app.use(passport.session());
+
+// this will act as a gate, checking if a user is authenticated, and allowing them past if they are
 function auth(req, res, next){
-  console.log(req.session);
-  if(!req.session.user) {
+  console.log(req.user);
+  if(!req.user) {
     const err = new Error('You are not authenticated!');
     err.status = 401;
     return next(err);
   } else {
-    if (req.session.user === 'authenticated') {
-      return next();
-    } else {
-      const err = new Error('You are not authenticated!');
-      err.status = 401;
-      return next(err);
-    }
+    return next();
   }
 }
 
