@@ -11,26 +11,33 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/signup', (req, res) => {
-  // since we are registering a new user, first step is to run the User.register method
   User.register(
-    // 1st argument: we'll get the username from the request
     new User({username: req.body.username}),
-    // 2nd argument: grab the password, also from the request
     req.body.password,
-    // 3rd, a callback function to handle errors
-    err => {
+    (err, user) => {
       if (err) {
-        // if err is not null, indicates there was some internal error
-        res.statusCode = 500; // the "It's not you, it's me" error
+        res.statusCode = 500;
         res.setHeader('Content-Type', 'application/json');
         res.json({err: err});
       } else {
-        // if err is null, input was valid, and we can authenticate the new user
-        // function takes the req, res, and a callback function for sending data back to the client from the server
-        passport.authenticate('local')(req, res, () => {
-          res.statusCode = 200;
-          res.setHeader('Content-Type', 'application/json');
-          res.json({success: true, status: 'Registration Successful!'});
+        if (req.body.firstname) {
+          user.firstname = req.body.firstname;
+        }
+        if (req.body.lastname) {
+          user.lastname = req.body.lastname;
+        }
+        user.save(err => {
+          if (err) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.json({err: err});
+            return;
+          }
+          passport.authenticate('local')(req, res, () => {
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.json({success: true, status: 'Registration Successful!'});
+          });
         });
       }
     }

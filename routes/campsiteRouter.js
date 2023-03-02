@@ -6,6 +6,7 @@ const authenticate = require('../authenticate');
 campsiteRouter.route('/')
 .get((req, res, next) => {
     Campsite.find()
+    .populate('comments.author')
     .then(campsites => {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
@@ -45,6 +46,7 @@ campsiteRouter.route('/')
 campsiteRouter.route('/:campsiteId')
 .get((req, res, next) => {
     Campsite.findById(req.params.campsiteId)
+    .populate('comments.author')
     .then(campsite => {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
@@ -80,6 +82,7 @@ campsiteRouter.route('/:campsiteId')
 campsiteRouter.route('/:campsiteId/comments')
 .get((req, res, next) => {
     Campsite.findById(req.params.campsiteId)
+    .populate('comments.author')
     .then(campsite => {
         if (campsite) {
             res.statusCode = 200;
@@ -93,14 +96,13 @@ campsiteRouter.route('/:campsiteId/comments')
     })
     .catch(err => next(err));
 })
-.post((req, res, next) => {
+.post(authenticate.verifyUser, (req, res, next) => {
     Campsite.findById(req.params.campsiteId)
     .then(campsite => {
         if (campsite) {
-            // this push method will only change the array saved in the local application's memory
-            campsite.comments.push(req.body);
-            // this save method will save the new array to the MongoDB database
-            campsite.save()
+            req.body.author = req.user._id; // saves the name of the authorized user to the name in the comment field   
+            campsite.comments.push(req.body); // this push method will only change the array saved in the local application's memory
+            campsite.save() // this save method will save the new array to the MongoDB database
             .then(campsite => {
                 res.statusCode = 200;
                 res.setHeader('Content-Type', 'aplication/json');
@@ -115,11 +117,11 @@ campsiteRouter.route('/:campsiteId/comments')
     })
     .catch(err => next(err));
 })
-.put((req, res) => {
+.put(authenticate.verifyUser, (req, res) => {
     res.statusCode = 403;
     res.end(`PUT operation not supported on /campsites/${req.params.campsiteId}/comments`);
 })
-.delete((req, res, next) => {
+.delete(authenticate.verifyUser, (req, res, next) => {
     Campsite.findById(req.params.campsiteId)
     .then(campsite => {
         if (campsite) {
@@ -146,6 +148,7 @@ campsiteRouter.route('/:campsiteId/comments')
 campsiteRouter.route('/:campsiteId/comments/:commentId')
 .get((req, res, next) => {
     Campsite.findById(req.params.campsiteId)
+    .populate('comments.author')
     .then(campsite => {
         // campsite.comments.id(...) will retrieve the comment subdocument with the id matching the argument
         // the if statement is just checking for truthy values 
