@@ -3,14 +3,7 @@ const express = require('express');
 const path = require('path');
 const logger = require('morgan');
 const passport = require('passport');
-const authenticate = require('./authenticate');
-const session = require('express-session');
-const FileStore = require('session-file-store')(session);
-/* ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-because of JavaScript's higher-order functions, we are calling the
-function being returned by require('session-file-store') with the
-parameter of (session), which we just got from require('express-session)
-*/
+const config = require('./config');
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const campsiteRouter = require('./routes/campsiteRouter');
@@ -18,7 +11,7 @@ const promotionRouter = require('./routes/promotionRouter');
 const partnerRouter = require('./routes/partnerRouter');
 
 const mongoose = require('mongoose');
-const url = 'mongodb://localhost:27017/nucampsite';
+const url = config.mongoUrl;
 const connect = mongoose.connect(url, {
   useCreateIndex: true,
   useFindAndModify: false,
@@ -35,22 +28,6 @@ connect.then(
 );
 
 const app = express();
-// app.use(cookieParser('12345-67890-09876-54321')); ...don't  use Cookie-Parser with Express-Session
-
-app.use(session({
-  name: 'session-id',
-  secret: '12345-67890-09876-54321',
-  // if no updates are made in a session, the session will not be saved
-  saveUninitialized: false,
-  // When true, this will force the session to be saved back to the session store, even if there were no updates
-  // Typically, you'll want to set this as false
-  resave: false,
-  store: new FileStore()
-}));
-
-// These two lines are only necessary if we're using passport with express-session
-app.use(passport.initialize());
-app.use(passport.session());
 
 // this will act as a gate, checking if a user is authenticated, and allowing them past if they are
 function auth(req, res, next){
@@ -73,11 +50,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 // app.use(cookieParser());
 
-app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(passport.initialize());
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-app.use(auth);
+
+app.use(express.static(path.join(__dirname, 'public')));
+
 app.use('/campsites', campsiteRouter);
 app.use('/promotions', promotionRouter);
 app.use('/partners', partnerRouter);
