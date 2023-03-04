@@ -6,8 +6,14 @@ const authenticate = require('../authenticate');
 const router = express.Router();
 
 // GET users listing (will eventually be used as an admin feature)
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
+router.get('/', authenticate.verifyUser, authenticate.verifyAdmin, function(req, res, next) {
+  User.find()
+  .then((users) => {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json');
+    res.json(users);
+  })
+  .catch(err => next(err));
 });
 
 router.post('/signup', (req, res) => {

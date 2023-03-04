@@ -4,6 +4,7 @@ const path = require('path');
 const logger = require('morgan');
 const passport = require('passport');
 const config = require('./config');
+
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const campsiteRouter = require('./routes/campsiteRouter');
@@ -28,18 +29,6 @@ connect.then(
 );
 
 const app = express();
-
-// this will act as a gate, checking if a user is authenticated, and allowing them past if they are
-function auth(req, res, next){
-  console.log(req.user);
-  if(!req.user) {
-    const err = new Error('You are not authenticated!');
-    err.status = 401;
-    return next(err);
-  } else {
-    return next();
-  }
-}
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
