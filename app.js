@@ -11,6 +11,7 @@ const campsiteRouter = require('./routes/campsiteRouter');
 const promotionRouter = require('./routes/promotionRouter');
 const partnerRouter = require('./routes/partnerRouter');
 const uploadRouter = require('./routes/uploadRouter');
+const favoriteRouter = require('./routes/favoriteRouter');
 
 const mongoose = require('mongoose');
 const url = config.mongoUrl;
@@ -21,7 +22,7 @@ const connect = mongoose.connect(url, {
   useUnifiedTopology: true
 });
 
-// This connect method refers to connecting to the M ongoDB server
+// This connect method refers to connecting to the MongoDB server
 // then methods have an optional second argument that will run if an error is caught
 // removes necessity for .catch method. Useful if you're not chaining promises.
 connect.then(
@@ -63,6 +64,7 @@ app.use('/campsites', campsiteRouter);
 app.use('/promotions', promotionRouter);
 app.use('/partners', partnerRouter);
 app.use('/imageUpload', uploadRouter);
+app.use('/favorites', favoriteRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
